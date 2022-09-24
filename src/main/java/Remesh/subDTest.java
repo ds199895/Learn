@@ -36,7 +36,7 @@ public class subDTest extends PApplet{
         cam.top();
         im=new ImportObj("D:\\360MoveData\\Users\\Administrator\\Documents\\WeChat Files\\wxid_h82vihn9t4rl22\\FileStorage\\File\\2022-09\\0917.3dm");
         mesh=im.getObj();
-        println("changej ");
+        println("change");
 //        import_dxf = new Import_dxf(this);
 //        mesh=import_dxf.getMesh("E:\\13.dxf");
         util=new Util(this);
