@@ -34,11 +34,11 @@ public class subDTest extends PApplet{
         render = new HE_Render(this);
         cam = new CameraController(this, 2000);
         cam.top();
-        im=new ImportObj("D:\\360MoveData\\Users\\Administrator\\Documents\\WeChat Files\\wxid_h82vihn9t4rl22\\FileStorage\\File\\2022-09\\0917.3dm");
-        mesh=im.getObj();
-        println("change");
-//        import_dxf = new Import_dxf(this);
-//        mesh=import_dxf.getMesh("E:\\13.dxf");
+//        im=new ImportObj("E:\\0917.3dm");
+//        mesh=im.getObj();
+//        println("change");
+        import_dxf = new Import_dxf(this);
+        mesh=import_dxf.getMesh("E:\\14.dxf");
         util=new Util(this);
 //        shell=mesh.getPolygonList().get(0);
 //        int count=0;
@@ -149,6 +149,10 @@ public class subDTest extends PApplet{
                     cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,0));
                 }
             }
+        }
+        if(key=='b'){
+            edges=mesh.getAllBoundaryHalfedges();
+
         }
     }
 

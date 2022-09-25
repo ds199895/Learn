@@ -164,6 +164,62 @@ public class Util {
         mesh.set(new HE_Mesh(hecp));
         return newPolys;
     }
+
+//    public List<WB_Polygon> diffOffset(HE_Mesh mesh, HE_Render render){
+//        List<WB_Polygon>newPolys=new ArrayList<>();
+//        List<WB_Segment>segmentsAll=new ArrayList<>();
+//        for(HE_Face f:mesh.getFaces()){
+//            List<WB_Point>segments=new ArrayList<>();
+//            for(int i=0;i<f.getFaceHalfedges().size();i++) {
+//                HE_Halfedge he=f.getFaceHalfedges().get(i);
+//                HE_Halfedge pre=he.getPrevInFace();
+//                double d1=he.getLength()/20.;
+//                double d2=pre.getLength()/20.;
+//                double alpha=HE_MeshOp.getAngle(he);
+//                double x1=(d2+d1*Math.cos(alpha))/ Math.sin(alpha);
+//                double x2=(d1+d2*Math.cos(alpha))/Math.sin(alpha);
+//                if(x1<=he.getLength()&&x2<=pre.getLength()){
+//                    double length= Math.sqrt(x1*x1+d1*d1);
+//
+//                    double alpha1=Math.atan(d1/x1);
+//
+//                    WB_Vector vec= (WB_Vector) he.getHalfedgeDirection();
+//
+//                    WB_Vector vecNew=vec.rotateAboutAxis(alpha1,new WB_Point(0,0,0), f.getFaceNormal()).mul(length);
+//
+//                    WB_Point offPt=he.getVertex().getPosition().add(vecNew);
+//                }
+//
+//            }
+//            segmentsAll.addAll(segments);
+//            List<WB_Point>offsetPts=new ArrayList<>();
+//            List<WB_Point>outerPoints=new ArrayList<>();
+//            for(int i=0;i<segments.size();i++){
+//                List<WB_Point>pts=new ArrayList<>();
+//                outerPoints.add(f.getFaceHalfedges().get(i).getVertex().getPosition());
+//                int pre=(i-1+segments.size())%segments.size();
+//                int nxt=(i+1)%segments.size();
+////                System.out.println(WB_GeometryOp.getIntersection3D(segments.get(i), segments.get(nxt)).object);
+//                WB_Point ps=(WB_Point)WB_GeometryOp.getIntersection3D(segments.get(i), segments.get(pre)).object;
+//                WB_Point pe=(WB_Point)WB_GeometryOp.getIntersection3D(segments.get(i), segments.get(nxt)).object;
+//                pts.add(f.getFaceHalfedges().get(i).getVertex().getPosition());
+//                pts.add(f.getFaceHalfedges().get(i).getEndVertex().getPosition());
+//                pts.add(pe);
+//                pts.add(ps);
+////                render.drawSegment((WB_Segment) WB_GeometryOp.getIntersection3D(segments.get(i), segments.get(nxt)).object);
+////                app.ellipse(WB_GeometryOp.getIntersection3D(segments.get(i), segments.get(nxt)).object.get);
+//                WB_Polygon polygon=WB_GeometryFactory.instance().createSimplePolygon(pts);
+//                newPolys.add(polygon);
+//            }
+////            WB_Polygon polygonWithHole=WB_GeometryFactory.instance().createPolygonWithHole(outerPoints,offsetPts);
+////            WB_Polygon polygonWithHole=WB_GeometryFactory.instance().createSimplePolygon(offsetPts);
+//
+//
+//        }
+//        HEC_FromPolygons hecp=new HEC_FromPolygons(newPolys);
+//        mesh.set(new HE_Mesh(hecp));
+//        return newPolys;
+//    }
     public static List<Integer> getSplitDistance(HE_Mesh mesh){
         List<Integer> targets=new ArrayList<>();
         int minLength=Integer.MAX_VALUE;
