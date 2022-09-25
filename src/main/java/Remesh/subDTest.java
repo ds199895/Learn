@@ -86,13 +86,13 @@ public class subDTest extends PApplet{
             popStyle();
         }
 
-//        if(polys!=null){
-//            pushStyle();
-//            stroke(255,0,0);
-//            strokeWeight(4);
-//            render.drawPolygonEdges(polys);
-//            popStyle();
-//        }
+        if(polys!=null){
+            pushStyle();
+            stroke(255,0,0);
+            strokeWeight(4);
+            render.drawPolygonEdges(polys);
+            popStyle();
+        }
     }
     boolean display=true;
     public void keyReleased() {
@@ -103,7 +103,7 @@ public class subDTest extends PApplet{
             display=!display;
         }
         if(key=='o'){
-            polys=util.differentialOffset(mesh,render);
+            polys=util.diffOffset(mesh,render);
         }
         if(key=='c'){
             println("Position:  "+cam.getCamera().getPosition());
