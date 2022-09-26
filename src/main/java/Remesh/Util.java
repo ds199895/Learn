@@ -1,6 +1,7 @@
 package Remesh;
 
 import com.sun.org.apache.regexp.internal.RE;
+import javafx.scene.shape.Mesh;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import processing.core.PApplet;
 import util.render.HE_Render;
@@ -8,9 +9,7 @@ import wblut.geom.*;
 import wblut.hemesh.*;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 
 public class Util {
@@ -196,145 +195,210 @@ public class Util {
         return offPt;
     }
 
+    public double calculateThreshold(HE_Halfedge he){
+        HE_Halfedge pre=he.getPrevInFace();
+        HE_Halfedge nxt=he.getNextInFace();
 
+//                pts.add(new WB_Point(he.getVertex()));
+//                pts.add(new WB_Point(nxt.getVertex()));
+        double d1=he.getLength()/5.;
+        double d2=pre.getLength()/5.;
+        double alpha=HE_MeshOp.getAngle(he);
+
+        double d1_n=nxt.getLength()/5.;
+        double d2_n=he.getLength()/5.;
+        double alpha_n=HE_MeshOp.getAngle(nxt);
+
+        double threshold=(he.getLength()* Math.sin(alpha)*Math.sin(alpha_n)-d2*Math.sin(alpha_n)-d1_n* Math.sin(alpha))/Math.sin(alpha+alpha_n);
+
+        return threshold;
+
+    }
+    
+    public boolean checkThreshold(HE_Mesh mesh, HashMap<Long,Double> distance){
+        boolean valid=false;
+        HE_Face f=mesh.getFaceWithIndex(0);
+        List<WB_Point>newPolyPts=new ArrayList<>();
+
+        int count=0;
+        for(int i=0;i<f.getFaceVertices().size();i++) {
+            newPolyPts.add(f.getFaceVertices().get(i).getPosition());
+        }
+
+//        List<Double>distance_temp=new ArrayList<>();
+//        distance_temp.addAll(distance);
+        for(int i=0;i<f.getFaceVertices().size();i++) {
+//                List<WB_Point>pts=new ArrayList<>();
+            HE_Vertex cen=f.getFaceVertices().get(i);
+
+            HE_Halfedge he=cen.getHalfedge(f);
+            HE_Halfedge pre=he.getPrevInFace();
+            HE_Halfedge nxt=he.getNextInFace();
+
+//                pts.add(new WB_Point(he.getVertex()));
+//                pts.add(new WB_Point(nxt.getVertex()));
+
+
+            double d1=distance.get(cen.getKey());
+            double d2=distance.get(pre.getVertex().getKey());
+            double alpha=HE_MeshOp.getAngle(he);
+
+            double d1_n=distance.get(nxt.getVertex().getKey());
+            double alpha_n=HE_MeshOp.getAngle(nxt);
+
+            double threshold=(he.getLength()* Math.sin(alpha)*Math.sin(alpha_n)-d2*Math.sin(alpha_n)-d1_n* Math.sin(alpha))/Math.sin(alpha+alpha_n);
+
+            System.out.println("threshold:  "+threshold);
+
+
+            if(d1<threshold){
+                System.out.println("less than threshold!");
+
+                if(f.getFaceVertices().size()>3){
+                    if(alpha>Math.PI/2&&alpha_n> Math.PI/2) {
+                        count++;
+                        System.out.println("find new Vertex!");
+                        double d1_r = d1_n;
+                        double d2_r = d2;
+
+                        double alpha_r = alpha + alpha_n - Math.PI;
+                        double x1_r = (d2_r + d1_r * Math.cos(alpha_r)) / Math.sin(alpha_r);
+                        double x2_r = (d1_r + d2_r * Math.cos(alpha_r)) / Math.sin(alpha_r);
+
+                        double L_1 = Math.sin(Math.PI-alpha) * he.getLength() / Math.sin(alpha_r);
+                        WB_Vector vec_n= (WB_Vector) nxt.getHalfedgeDirection();
+                        WB_Vector vectorOpp=vec_n.mul(-1).mul(L_1);
+                        WB_Point newVer=nxt.getVertex().getPosition().add(vectorOpp);
+//                        int index=newPolyPts.indexOf(he.getVertex().getPosition());
+//                        newPolyPts.add(index,newVer);
+//                        newPolyPts.remove(he.getVertex().getPosition());
+//                        newPolyPts.remove(he.getEndVertex().getPosition());
+                        nxt.getVertex().set(newVer);
+//                         distance.put(nxt.getVertex().getKey(),d1_n);
+                        collapseEdgeBoundary(mesh,he,true);
+                        System.out.println("new Vertex:  "+newVer);
+                    }
+                }
+            }
+        }
+
+        if(count==0){
+            valid=true;
+            System.out.println("valid:  "+valid);
+        }else{
+            System.out.println("valid:  "+valid);
+            System.out.println("count:  "+count);
+        }
+
+//        List<WB_Polygon>poly_temp=new ArrayList<>();
+//        poly_temp.add(WB_GeometryFactory.instance().createSimplePolygon(newPolyPts));
+//        HEC_FromPolygons hecp_temp=new HEC_FromPolygons(poly_temp);
+//        mesh.set(new HE_Mesh(hecp_temp));
+        return valid;
+    }
+    public static boolean collapseEdgeBoundary(HE_Mesh mesh, HE_Halfedge e, boolean strict) {
+        if (mesh.contains(e)) {
+            HE_Halfedge he = e.isEdge() ? e : e.getPair();
+            HE_Halfedge hePair = he.getPair();
+            HE_Face f = he.getFace();
+            HE_Face fp = hePair.getFace();
+            HE_Vertex v = he.getVertex();
+            HE_Vertex vp = hePair.getVertex();
+
+            List<HE_Halfedge> tmp = v.getHalfedgeStar();
+
+            for(int i = 0; i < tmp.size(); ++i) {
+                mesh.setVertex((HE_Halfedge)tmp.get(i), vp);
+            }
+
+            mesh.setHalfedge(vp, hePair.getNextInVertex());
+            HE_Halfedge hen = he.getNextInFace();
+            HE_Halfedge hep = he.getPrevInFace();
+            HE_Halfedge hePairn = hePair.getNextInFace();
+            HE_Halfedge hePairp = hePair.getPrevInFace();
+            if (f != null) {
+                mesh.setHalfedge(f, hen);
+            }
+
+            if (fp != null) {
+                mesh.setHalfedge(fp, hePairn);
+            }
+
+            mesh.setNext(hep, hen);
+            mesh.setNext(hePairp, hePairn);
+            mesh.remove(he);
+            mesh.remove(hePair);
+            mesh.remove(e);
+            mesh.remove(v);
+            if (f != null) {
+                HET_Fixer.deleteTwoEdgeFace(mesh, f);
+            }
+
+            if (fp != null) {
+                HET_Fixer.deleteTwoEdgeFace(mesh, fp);
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
     public List<WB_Polygon> diffOffset(HE_Mesh mesh, HE_Render render){
         List<WB_Polygon>newPolys=new ArrayList<>();
-        List<WB_Segment>segmentsAll=new ArrayList<>();
 
         for(HE_Face f:mesh.getFaces()){
-            boolean valid=true;
+            boolean valid=false;
 //            List<List<WB_Point>>allPts=new ArrayList<>();
             List<WB_Point>pts=new ArrayList<>();
-            boolean[] verOff=new boolean[f.getFaceVertices().size()];
-            for(int i=0;i<f.getFaceVertices().size();i++) {
-                verOff[i]=true;
-            }
-            for(int i=0;i<f.getFaceVertices().size();i++) {
-//                List<WB_Point>pts=new ArrayList<>();
-                HE_Vertex cen=f.getFaceVertices().get(i);
 
-                HE_Halfedge he=cen.getHalfedge(f);
-                HE_Halfedge pre=he.getPrevInFace();
-                HE_Halfedge nxt=he.getNextInFace();
-
-//                pts.add(new WB_Point(he.getVertex()));
-//                pts.add(new WB_Point(nxt.getVertex()));
-
-
-                double d1=he.getLength()/5.;
-                double d2=pre.getLength()/5.;
-                double alpha=HE_MeshOp.getAngle(he);
-                double x1=(d2+d1*Math.cos(alpha))/ Math.sin(alpha);
-                double x2=(d1+d2*Math.cos(alpha))/Math.sin(alpha);
-
-                double d1_n=nxt.getLength()/5.;
-                double d2_n=he.getLength()/5.;
-                double alpha_n=HE_MeshOp.getAngle(nxt);
-                double x1_n=(d2_n+d1_n*Math.cos(alpha_n))/ Math.sin(alpha_n);
-                double x2_n=(d1_n+d2_n*Math.cos(alpha_n))/Math.sin(alpha_n);
-
-                double threshold=(he.getLength()* Math.sin(alpha)*Math.sin(alpha_n)-d2*Math.sin(alpha_n)-d1_n* Math.sin(alpha))/Math.sin(alpha+alpha_n);
-
-
-                System.out.println("threshold:  "+threshold);
-
-
-                if(d1>threshold){
-                    if(verOff[i]){
-                        verOff[i]=true;
-                    }
-                }else{
-                    System.out.println("less!");
-                    verOff[i]=false;
-                    verOff[(i+1)%f.getFaceVertices().size()]=false;
-                }
-            }
-            List<WB_Point>newPolyPts=new ArrayList<>();
-            for(int i=0;i<f.getFaceVertices().size();i++){
-                HE_Vertex cen=f.getFaceVertices().get(i);
-                int nxtIndex=(i+1)%f.getFaceVertices().size();
-                int nxtIndex2=(i+2)%f.getFaceVertices().size();
-                int preIndex=(i-1+f.getFaceVertices().size())%f.getFaceVertices().size();
-                HE_Halfedge he=cen.getHalfedge(f);
-                HE_Halfedge pre=he.getPrevInFace();
-                HE_Halfedge nxt=he.getNextInFace();
-
-//                pts.add(new WB_Point(he.getVertex()));
-//                pts.add(new WB_Point(nxt.getVertex()));
-
-
-                double d1=he.getLength()/5.;
-                double d2=pre.getLength()/5.;
-                double alpha=HE_MeshOp.getAngle(he);
-                double x1=(d2+d1*Math.cos(alpha))/ Math.sin(alpha);
-                double x2=(d1+d2*Math.cos(alpha))/Math.sin(alpha);
-
-                double d1_n=nxt.getLength()/5.;
-                double d2_n=he.getLength()/5.;
-                double alpha_n=HE_MeshOp.getAngle(nxt);
-                if(!verOff[i]&&!verOff[nxtIndex]){
-                    if(f.getFaceVertices().size()>3){
-                        if(alpha>Math.PI/2&&alpha_n> Math.PI/2) {
-                            double d1_r = d1_n;
-                            double d2_r = d2;
-
-                            double alpha_r = alpha + alpha_n - Math.PI;
-                            double x1_r = (d2_r + d1_r * Math.cos(alpha_r)) / Math.sin(alpha_r);
-                            double x2_r = (d1_r + d2_r * Math.cos(alpha_r)) / Math.sin(alpha_r);
-//
-                            double L_1 = Math.sin(Math.PI-alpha) * he.getLength() / Math.sin(alpha_r);
-                            WB_Vector vec_n= (WB_Vector) nxt.getHalfedgeDirection();
-                            WB_Vector vectorOpp=vec_n.mul(-1).mul(L_1);
-                            WB_Point newVer=nxt.getVertex().getPosition().add(vectorOpp);
-                            newPolyPts.add(newVer);
-                        }
-                    }
-                }else if(verOff[i]&&verOff[nxtIndex]){
-                    newPolyPts.add(he.getVertex().getPosition());
-                }
-                else if(verOff[i]&&!verOff[nxtIndex]){
-                    newPolyPts.add(he.getVertex().getPosition());
-                }
-            }
             List<WB_Polygon>poly_temp=new ArrayList<>();
-            poly_temp.add(WB_GeometryFactory.instance().createSimplePolygon(newPolyPts));
+            poly_temp.add(f.getPolygon());
             HEC_FromPolygons hecp_temp=new HEC_FromPolygons(poly_temp);
-            HE_Mesh mesh_temp=new HE_Mesh(hecp_temp);
+            HE_Mesh mesh_temp = new HE_Mesh(hecp_temp);
+            HashMap<Long,Double>distance=new HashMap<>();
+
+            for(int i=0;i<mesh_temp.getVertices().size();i++) {
+                distance.put(mesh_temp.getVertexWithIndex(i).getKey(),mesh_temp.getHalfedgeWithIndex(i).getLength()/5.);
+            }
+            while(!valid){
+//            for(int i=0;i<1;i++){
+                System.out.println("init valid:  "+valid);
+                valid=checkThreshold(mesh_temp,distance);
+            }
+//            newPolys.add(mesh_temp.getPolygonList().get(0));
+            
             for(HE_Face face:mesh_temp.getFaces()){
                 for(int i=0;i<face.getFaceVertices().size();i++) {
-//                List<WB_Point>pts=new ArrayList<>();
-                    HE_Vertex cen=f.getFaceVertices().get(i);
+                    HE_Vertex cen=face.getFaceVertices().get(i);
 
-                    HE_Halfedge he=cen.getHalfedge(f);
+                    HE_Halfedge he=cen.getHalfedge(face);
                     HE_Halfedge pre=he.getPrevInFace();
-                    HE_Halfedge nxt=he.getNextInFace();
+//                    HE_Halfedge nxt=he.getNextInFace();
 
-//                pts.add(new WB_Point(he.getVertex()));
-//                pts.add(new WB_Point(nxt.getVertex()));
-
-
-                    double d1=he.getLength()/5.;
-                    double d2=pre.getLength()/5.;
+                    double d1=distance.get(cen.getKey());
+                    double d2=distance.get(pre.getVertex().getKey());
                     double alpha=HE_MeshOp.getAngle(he);
-                    double x1=(d2+d1*Math.cos(alpha))/ Math.sin(alpha);
-                    double x2=(d1+d2*Math.cos(alpha))/Math.sin(alpha);
+//                    double x1=(d2+d1*Math.cos(alpha))/ Math.sin(alpha);
+//                    double x2=(d1+d2*Math.cos(alpha))/Math.sin(alpha);
 
-                    double d1_n=nxt.getLength()/5.;
-                    double d2_n=he.getLength()/5.;
-                    double alpha_n=HE_MeshOp.getAngle(nxt);
-                    double x1_n=(d2_n+d1_n*Math.cos(alpha_n))/ Math.sin(alpha_n);
-                    double x2_n=(d1_n+d2_n*Math.cos(alpha_n))/Math.sin(alpha_n);
-                    WB_Point offPt=findOffsetPoint(he);
+//                    double d1_n=nxt.getLength()/5.;
+//                    double d2_n=he.getLength()/5.;
+//                    double alpha_n=HE_MeshOp.getAngle(nxt);
+//                    double x1_n=(d2_n+d1_n*Math.cos(alpha_n))/ Math.sin(alpha_n);
+//                    double x2_n=(d1_n+d2_n*Math.cos(alpha_n))/Math.sin(alpha_n);
+                    WB_Point offPt=findOffsetPoint(he.getVertex(),d1,d2,alpha,(WB_Vector) he.getHalfedgeDirection(),(WB_Vector) f.getFaceNormal());
                     pts.add(offPt);
                 }
             }
 
-            if(valid){
+//            if(valid){
 //                for(List<WB_Point>pts:allPts){
                     WB_Polygon poly=WB_GeometryFactory.instance().createSimplePolygon(pts);
+            System.out.println("pointsNum: "+poly.getNumberOfPoints()+"   area: "+poly.getNormal());
                     newPolys.add(poly);
 //                }
-            }
+//            }
         }
 //        HEC_FromPolygons hecp=new HEC_FromPolygons(newPolys);
 //        mesh.set(new HE_Mesh(hecp));
