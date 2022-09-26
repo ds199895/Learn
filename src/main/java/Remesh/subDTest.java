@@ -3,6 +3,7 @@ package Remesh;
 import guo_cam.CameraController;
 import guo_cam.Vec_Guo;
 import processing.core.PApplet;
+import util.geometry.GeomFactory;
 import util.render.HE_Render;
 import wblut.geom.*;
 import wblut.hemesh.*;
@@ -29,17 +30,20 @@ public class subDTest extends PApplet{
     List<WB_Polygon>polys=new ArrayList<>();
     HE_Mesh newMesh;
     ImportObj im;
+    WB_Point cen;
+    WB_Polygon rect;
     public void setup() {
         size(1600, 1000, P3D);
         render = new HE_Render(this);
         cam = new CameraController(this, 2000);
         cam.top();
-//        im=new ImportObj("E:\\0917.3dm");
-//        mesh=im.getObj();
-//        println("change");
+        im=new ImportObj("E:\\0917.3dm");
+        mesh=im.getObj();
         import_dxf = new Import_dxf(this);
-        mesh=import_dxf.getMesh("E:\\14.dxf");
+//        mesh=import_dxf.getMesh("E:\\13.dxf");
         util=new Util(this);
+        rect= GeomFactory.getMinimumEnvelope(mesh.getFaceWithIndex(0).getPolygon());
+//        cen=rect.getCenter();
 //        shell=mesh.getPolygonList().get(0);
 //        int count=0;
 //        while (count<100){
@@ -56,7 +60,11 @@ public class subDTest extends PApplet{
         background(255);
         stroke(0);
         render.drawEdges(mesh);
-
+//        render.drawPoint(cen,200);
+//        render.drawPolygonEdges(rect);
+        if(lightsOn){
+            lights();
+        }
         if(display){
             render.disPlayHeMeshWithDegree(mesh,cam.getCamera().getPosition().dist(cam.getCamera().getLookAt()));
         }
@@ -95,6 +103,7 @@ public class subDTest extends PApplet{
         }
     }
     boolean display=true;
+    boolean lightsOn=false;
     public void keyReleased() {
         if (key == 's') {
            subD(mesh);
@@ -115,6 +124,9 @@ public class subDTest extends PApplet{
             cam.setCurrentViewToPerspective();
             cam.perspective();
         }
+        if(key=='l'){
+            lightsOn=!lightsOn;
+        }
         if(key=='t'){
             cam.top();
         }
@@ -124,26 +136,36 @@ public class subDTest extends PApplet{
         if(key=='r'){
             WB_AABB aabb=mesh.getAABB();
             double dis=0;
-            dis=max((float) (996*aabb.getWidth()/(width-100)),(float) (996*aabb.getHeight()/(height-100)));
+            double diagonal=sqrt((float) (aabb.getWidth()*aabb.getWidth()+aabb.getHeight()*aabb.getHeight()+aabb.getMaxZ()*aabb.getMaxZ()));
+
+//            dis=max((float) (996*aabb.getWidth()/(width-100)),(float) (996*aabb.getHeight()/(height-100)));
+            if(cam.getCamera().getLookAt().z==0){
+                dis=max((float) (996*aabb.getWidth()/(width-100)),(float) (996*aabb.getHeight()/(height-100)));
+            }else{
+                dis=(float) (996*diagonal/(width-100));
+            }
+//            dis=max((float) (996*diagonal/(width-100)),(float) (996*diagonal/(height-100)));
             if(cam.getCamera().getPerspective()){
                 cam=new CameraController(this,dis);
-                Vec_Guo newPos=new Vec_Guo(mesh.getAABB().getCenter().xf(), mesh.getAABB().getCenter().yf(),dis);
+                double zAxis=max((float) dis,(float)mesh.getAABB().getMaxZ());
+                Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),zAxis);
                 println(newPos);
-                cam.getCamera().setPosition(new Vec_Guo(dis*sin(PI/3),dis*cos(PI/3),dis/tan(PI/3)));
-                cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,1200));
+                cam.getCamera().setPosition(new Vec_Guo(newPos.x-dis*sin(PI/3),newPos.y-dis*cos(PI/3),dis));
+                cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,aabb.getCenter().zf()+5));
             }else{
                 println("ok");
                 if(cam.getCamera().getLookAt().z!=0){
                     cam=new CameraController(this,dis);
-                    Vec_Guo newPos=new Vec_Guo(mesh.getAABB().getCenter().xf(), mesh.getAABB().getCenter().yf(),dis);
+                    double zAxis=max((float) dis,(float)aabb.getMaxZ());
+                    Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),zAxis);
                     println(newPos);
-                    cam.getCamera().setPosition(new Vec_Guo(dis*sin(PI/3),dis*cos(PI/3),dis/tan(PI*2/3)));
-                    cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,1200));
+                    cam.getCamera().setPosition(new Vec_Guo(newPos.x-dis*sin(PI/3),newPos.y-dis*cos(PI/3),dis));
+                    cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,aabb.getCenter().zf()+5));
                     cam.setCurrentViewToOrtho();
                 }else{
                     cam=new CameraController(this,dis);
                     cam.top();
-                    Vec_Guo newPos=new Vec_Guo(mesh.getAABB().getCenter().xf(), mesh.getAABB().getCenter().yf(),dis);
+                    Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),dis);
                     println(newPos);
                     cam.getCamera().setPosition(newPos);
                     cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,0));

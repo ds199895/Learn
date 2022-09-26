@@ -9,6 +9,7 @@ import wblut.hemesh.HE_Mesh;
 import wblut.hemesh.HE_Vertex;
 import wblut.processing.WB_Render3D;
 
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -53,6 +54,23 @@ public class HE_Render extends WB_Render3D{
         return average;
     }
 
+    public double displayHeFaces(HE_Mesh mesh,Color color){
+        double average=0;
+        for(HE_Face face:mesh.getFaces()){
+            displaySingleHeFace(face,color);
+        }
+        average/=mesh.getNumberOfHalfedges();
+        return average;
+    }
+
+    public void displaySingleHeFace(HE_Face face,Color color){
+        home.pushStyle();
+        home.fill(color.getRGB());
+        this.drawFace(face);
+        home.popStyle();
+    }
+
+
     public double[] calEdgeLengthRange(HE_Mesh mesh){
         double[]range=new double[2];
         double minLength=Double.MAX_VALUE;
@@ -74,9 +92,47 @@ public class HE_Render extends WB_Render3D{
         displayHeVertices(mesh);
     }
     public void disPlayHeMeshWithDegree(HE_Mesh mesh,double distance){
+        displayHeFacesWithDegree(mesh);
         displayHalfEdges(mesh);
         displayHeVerticesWithDegree(mesh,distance);
+        Color colorless=new Color(250, 250, 240);
+        Color color5=new Color(250, 240, 240);
+        Color color6=new Color(240, 230, 230);
+        Color color7=new Color(230, 220, 240);
+        Color colormore=new Color(245, 235, 253);
+//        displayHeFaces(mesh,color6);
+
     }
+    public void displayHeFacesWithDegree(HE_Mesh mesh){
+        home.pushStyle();
+        Color colorless=new Color(250, 250, 240);
+        Color color5=new Color(250, 240, 240);
+        Color color6=new Color(235, 253, 240);
+        Color color7=new Color(190, 220, 240);
+        Color colormore=new Color(180, 200, 253);
+
+//        Color colorless=new Color(250, 250, 240);
+//        Color color5=new Color(250, 240, 240);
+//        Color color6=new Color(240, 230, 230);
+//        Color color7=new Color(230, 220, 240);
+//        Color colormore=new Color(245, 235, 253);
+
+        for(HE_Face f:mesh.getFaces()){
+            if(f.getFaceDegree()==5){
+                displaySingleHeFace(f,color5);
+            }else if(f.getFaceDegree()==6){
+                displaySingleHeFace(f,color6);
+            }else if(f.getFaceDegree()==7){
+                displaySingleHeFace(f,color7);
+            }else if(f.getFaceDegree()<5){
+                displaySingleHeFace(f,colorless);
+            }else if(f.getFaceDegree()>7){
+                displaySingleHeFace(f,colormore);
+            }
+        }
+        home.popStyle();
+    }
+
     public void displayHeVerticesWithDegree(HE_Mesh mesh,double distance){
 //        double coefficient=27.4*calAverageEdgeLength(mesh)/distance;
         double r=0;

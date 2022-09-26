@@ -402,6 +402,61 @@ public class GeomFactory {
         return containedPolys;
     }
     /**
+     * 	基于旋转找到多边形最小外接矩形
+     * */
+    public static WB_Polygon getMinimumEnvelope(WB_Polygon poly) {
+        WB_Vector originNormal=poly.getNormal();
+
+        WB_Transform3D transform=new WB_Transform3D(poly.getCenter(),originNormal,new WB_Point(0,0,0),new WB_Vector(0,0,1));
+        poly.applySelf(transform);
+        WB_GeometryFactory2D wbgf=new WB_GeometryFactory2D();
+
+        WB_Polygon hull=wbgf.createPolygonConvexHull2D(poly);
+
+        // 直接使用中心值
+        WB_Coord c = hull.getCenter();
+
+        WB_Coord[] coords =hull.getPoints().toArray();
+
+        double minArea = Double.MAX_VALUE;
+        double minAngle = 0;
+        WB_Polygon ssr = null;
+        WB_Coord ci = coords[0];
+        WB_Coord cii;
+        for (int i = 0; i < coords.length - 1; i++) {
+            cii = coords[i + 1];
+            double angle = Math.atan2(cii.yd() - ci.yd(), cii.xd() - ci.xd());
+            WB_Polygon rect =GeomFactory.jtsPolygon2WB_Polygon2D(GeomFactory.toJTSPolygon(rotate(hull, c, -1 * angle)).getEnvelope());
+
+            double area = Math.abs((float) rect.getSignedArea());
+            if (area < minArea) {
+                minArea = area;
+                ssr = rect;
+                minAngle = angle;
+            }
+            ci = cii;
+        }
+        poly=rotate(ssr,c,minAngle);
+        transform.inverse();
+        poly.applySelf(transform);
+        return poly;
+    }
+    /**
+     * 	从众多JTS的LineString中（包括basePolygon）"提取出"包含于basePolygon中的多边形集合
+     * */
+
+    public static WB_Polygon rotate(WB_Polygon p,WB_Coord c,double a) {
+        WB_Coord[] cs=p.getPoints().toArray();
+
+        WB_Coord[] cs1=new WB_Point[cs.length];
+        for(int i=0;i<cs.length;i++) {
+            cs1[i]=new WB_Point((cs[i].xd()-c.xd())*Math.cos((float) a)-(cs[i].yd()-c.yd())*Math.sin((float) a)+c.xd(),(cs[i].xd()-c.xd())*Math.sin((float) a)+(cs[i].yd()-c.yd())*Math.cos((float) a)+c.yd());
+        }
+        WB_GeometryFactory2D wbgf=new WB_GeometryFactory2D();
+
+        return wbgf.createSimplePolygon(cs1);
+    }
+    /**
      * 	从众多JTS的LineString中（包括basePolygon）"提取出"包含于basePolygon中的多边形集合
      * */
     public static List<Polygon> extractLines2JTSPolygon(List<Geometry> lineStringCollection, Polygon basePolygon,double d) {
