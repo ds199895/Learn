@@ -146,6 +146,7 @@ public class subDTest extends PApplet{
             }
 //            dis=max((float) (996*diagonal/(width-100)),(float) (996*diagonal/(height-100)));
             if(cam.getCamera().getPerspective()){
+                println("Perspective!");
                 cam=new CameraController(this,dis);
                 double zAxis=max((float) dis,(float)mesh.getAABB().getMaxZ());
                 Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),zAxis);
@@ -153,8 +154,8 @@ public class subDTest extends PApplet{
                 cam.getCamera().setPosition(new Vec_Guo(newPos.x-dis*sin(PI/3),newPos.y-dis*cos(PI/3),dis));
                 cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,aabb.getCenter().zf()+5));
             }else{
-                println("ok");
                 if(cam.getCamera().getLookAt().z!=0){
+                    println("Ortho!");
                     cam=new CameraController(this,dis);
                     double zAxis=max((float) dis,(float)aabb.getMaxZ());
                     Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),zAxis);
@@ -163,6 +164,7 @@ public class subDTest extends PApplet{
                     cam.getCamera().setLookAt(new Vec_Guo(newPos.x,newPos.y,aabb.getCenter().zf()+5));
                     cam.setCurrentViewToOrtho();
                 }else{
+                    println("Top!");
                     cam=new CameraController(this,dis);
                     cam.top();
                     Vec_Guo newPos=new Vec_Guo(aabb.getCenter().xf(), aabb.getCenter().yf(),dis);
