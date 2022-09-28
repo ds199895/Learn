@@ -53,6 +53,19 @@ public class subDTest extends PApplet{
 //                count++;
 //            }
 //        }
+        for(int i = 0; i < 10; i++)
+        {
+            float y = 0;
+            if (i % 2 == 0)
+            {
+                y = 20;
+            }
+            int nxt = (i + 1) % 10;
+            HE_Vertex vs = new HE_Vertex(new HS_Point(10*i, y, 0));
+            HE_Vertex ve = new HE_Vertex(new HS_Point(10 * nxt, y, 0));
+
+            HE_Halfedge he = new GE_Halfedge();
+            println(vs)
 
     }
 
@@ -176,7 +189,8 @@ public class subDTest extends PApplet{
         }
         if(key=='b'){
             edges=mesh.getAllBoundaryHalfedges();
-
+            WB_Point p;
+            HE_Vertex v;
         }
     }
 
