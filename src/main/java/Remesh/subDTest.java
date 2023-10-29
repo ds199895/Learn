@@ -37,12 +37,12 @@ public class subDTest extends PApplet{
         render = new HE_Render(this);
         cam = new CameraController(this, 2000);
         cam.top();
-        im=new ImportObj("E:\\0917.3dm");
-        mesh=im.getObj();
+        im = new ImportObj("E:\\0917.3dm");
+        mesh = im.getObj();
         import_dxf = new Import_dxf(this);
 //        mesh=import_dxf.getMesh("E:\\13.dxf");
-        util=new Util(this);
-        rect= GeomFactory.getMinimumEnvelope(mesh.getFaceWithIndex(0).getPolygon());
+        util = new Util(this);
+        rect = GeomFactory.getMinimumEnvelope(mesh.getFaceWithIndex(0).getPolygon());
 //        cen=rect.getCenter();
 //        shell=mesh.getPolygonList().get(0);
 //        int count=0;
@@ -53,20 +53,19 @@ public class subDTest extends PApplet{
 //                count++;
 //            }
 //        }
-        for(int i = 0; i < 10; i++)
-        {
+        for (int i = 0; i < 10; i++) {
             float y = 0;
-            if (i % 2 == 0)
-            {
+            if (i % 2 == 0) {
                 y = 20;
             }
             int nxt = (i + 1) % 10;
-            HE_Vertex vs = new HE_Vertex(new HS_Point(10*i, y, 0));
-            HE_Vertex ve = new HE_Vertex(new HS_Point(10 * nxt, y, 0));
+            HE_Vertex vs = new HE_Vertex(new WB_Point(10 * i, y, 0));
+            HE_Vertex ve = new HE_Vertex(new WB_Point(10 * nxt, y, 0));
 
-            HE_Halfedge he = new GE_Halfedge();
-            println(vs)
+            HE_Halfedge he = new HE_Halfedge();
+            println(vs);
 
+        }
     }
 
     public void draw() {

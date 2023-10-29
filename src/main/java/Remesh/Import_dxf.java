@@ -179,7 +179,7 @@ public class Import_dxf {
 		return pts;
 	}
 
-	public static WB_Polygon getPolygon(DXFPolyline pline) {
+	public WB_Polygon getPolygon(DXFPolyline pline) {
 		WB_GeometryFactory2D wbgf=new WB_GeometryFactory2D();
 		List<WB_Coord>wc=new ArrayList<WB_Coord>();
 		for (int i = 0; i < pline.getVertexCount(); i++) {
@@ -190,6 +190,17 @@ public class Import_dxf {
 		WB_Polygon poly=wbgf.createSimplePolygon(wc);
 		
 		return poly;
+	}
+
+	public List<WB_Polygon> getPolygons(String path){
+		List<List<DXFPolyline >>plines=this.input_dxf_polyline(path);
+		List<WB_Polygon>polygons=new ArrayList<>();
+		for(List<DXFPolyline>pls:plines){
+			for(DXFPolyline pline:pls){
+				polygons.add(this.getPolygon(pline));
+			}
+		}
+		return polygons;
 	}
 
 	public static float x(DXFVertex v) {
